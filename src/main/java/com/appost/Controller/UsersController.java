@@ -41,31 +41,41 @@ public class UsersController {
     private EmailService emailService;
 
     @PostMapping("/addUser")
-    public void addNewUser(@RequestBody User user) {
-        User newUser = user;
-        user.setResetPasswordRequest(false);
-        if (newUser.getRole().equals(Roles.NORMAL)) {
-            newUser.setPercentageDisc(0);
+    public String addNewUser(@RequestBody User user) {
+        User userAdmin = userManager.searchUserByID(UUID.fromString(user.getId().toString())).get();
+        if(userAdmin.getRole() == Roles.ADMIN || user.getRole() == Roles.NORMAL){
+        
+            User newUser = user;
+            user.setResetPasswordRequest(false);
+        
+            if (newUser.getRole().equals(Roles.NORMAL)) {
+                newUser.setPercentageDisc(0);
+            }
+            UUID newID = UUID.randomUUID();
+            while (!userManager.newIDUserAvailable(newID)) {
+                newID = UUID.randomUUID();
+            }
+            newUser.setId(newID);
+            userManager.addNewUser(newUser);
+            return "Utente " + user.getUsername() + " aggiunto correttamente";
         }
-        UUID newID = UUID.randomUUID();
-        while (!userManager.newIDUserAvailable(newID)) {
-            newID = UUID.randomUUID();
+        else{
+            return "Non l'autoizzazione per poter aggiungere un nuovo utente con il ruolo assegnatogli.";
         }
-        newUser.setId(newID);
-        userManager.addNewUser(newUser);
     }
 
     @PostMapping("/increasePercDisc")
-    public void increasePercDisc(@RequestBody Map<String, String> map) {
+    public String increasePercDisc(@RequestBody Map<String, String> map) {
 
         if (map.containsKey("partecipants") && map.get("partecipants") != null && map.containsKey("idEvent")
                 && map.get("idEvent") != null) {
+                    Event event = eventManager.searchEventByID(UUID.fromString(map.get("idEvent"))).get();
+                    if(UUID.fromString(map.get("idOrganizer")) == event.getIdOrganizer()){
             JSONArray partecipantsToAddDisc = new JSONArray(map.get("partecipants"));
             List<Partecipant> partecipantsToEvent = partecipantManager
                     .getAllPartecipantToEvent(UUID.fromString(map.get("idEvent")));
 
-            if (partecipantsToEvent != null && partecipantsToAddDisc.length() > 0) {
-                if (!partecipantsToAddDisc.toString().equals("") && !partecipantsToAddDisc.isEmpty()) {
+            if (partecipantsToEvent != null && !partecipantsToAddDisc.toString().equals("") && !partecipantsToAddDisc.isEmpty()) {
                     for (int i = 0; i < partecipantsToAddDisc.length(); i++) {
                         String tempString = (String) partecipantsToAddDisc.get(i);
                         JSONObject jobj = new JSONObject(tempString);
@@ -83,8 +93,21 @@ public class UsersController {
                             userManager.updateUser(user);
                         }
                     }
-                }
+                    return "Sconti abilitati correttamente";
+                              
             }
+            else{
+            return "Selezionare utenti a cui abilitare lo sconto";
+            }
+
+        }else{
+            //TO DO informare l'utente dell'errore
+            return null;
+        }
+        }
+        else{
+            //TO DO informare l'utente dell'errore
+            return null;
         }
     }
 
@@ -114,15 +137,24 @@ public class UsersController {
     }
 
     @PostMapping("/addNewFriend")
-    public void addNewFriend(@RequestBody Map<String, String> map) {
+    public String addNewFriend(@RequestBody Map<String, String> map) {
         String usernameFriend1 = map.get("usernameFriend1");
         String usernameFriend2 = map.get("usernameFriend2");
 
-        userManager.addNewUserFriendship(usernameFriend1, usernameFriend2);
+        if(userManager.addNewUserFriendship(usernameFriend1, usernameFriend2))
+        {
+            return "Amico aggiunto correttamente";
+        }
+        else
+        {
+            return "L'utente che si desidra aggiungere non è presente nel sistema. " +
+            "Assicurati che il nome inserito sia corretto o che l'amico che hai intenzione di aggiungere" +
+            "Sia iscritto all'app";
+        }
     }
 
     @PostMapping("/login")
-    public User login(@RequestBody Map<String, String> map) {
+    public String login(@RequestBody Map<String, String> map) {
         if (map.containsKey("username")) {
             User user = userManager.searchUserByUsername(map.get("username"));
             if (user != null) {
@@ -131,17 +163,21 @@ public class UsersController {
                         user = null;
                     }
                 } else {
-                    return null;
+                    return "Errore nel sistema. Riprovare più tardi. Se l'errore persiste reinstallare l'App o "+
+                    "segnalare l'accaduto al centro assistenda" +
+                    "all'indirizzo appost@x";
                 }
             }
             if (user == null){
-                //TO DO informare l'utente di un errore
-                System.out.println("User insesistente");
+                return "Username o password errate";
             }
 
-            return user;
+            return new JSONObject(user).toString();
         } else {
-            return null;
+            //TO DO inserire la mail di supporto dell'app
+            return "Errore nel sistema. Riprovare più tardi. Se l'errore persiste reinstallare l'App o "+
+            "segnalare l'accaduto al centro assistenda" +
+            "all'indirizzo appost@x";
         }
     }
 
@@ -157,14 +193,11 @@ public class UsersController {
                     if (eventManager.existingEvent(p.getIdEvent())) {
                         events.add(eventManager.getEvent(p.getIdEvent()));
                     } else {
-                        // TO DO errore interno al sistema, l'evento non esiste più ma non è stato
-                        // correttamente eliminata l'iscrizione. Eliminare il record dal DB
+                        partecipantManager.eventDeleted(p.getIdEvent());
                     }
                 }
                 return events;
             } else {
-                // TO DO rispondere qualcosa che segnali l'errore o l'assenza di eventi a cui
-                // l'utente è iscritto
                 return null;
             }
         } else {
@@ -197,7 +230,13 @@ public class UsersController {
         if (map.containsKey("idUser") && map.get("idUser") != null) {
             User user = userManager.searchUserByID(UUID.fromString(map.get("idUser"))).get();
             if (user != null) {
-                return userManager.getDiscToApplyList(user.getUsername());
+                List<DiscToApply> response = userManager.getDiscToApplyList(user.getUsername());
+                if(response.size() < 1)
+                {
+                    return null;
+                }
+                else
+                    return response;
             } else {
                 // TO DO informare l'utente dell'errore
                 return null;
@@ -240,6 +279,7 @@ public class UsersController {
         if (map.containsKey("idUser") && map.get("idUser") != null
                 && !userManager.newIDUserAvailable(UUID.fromString(map.get("idUser")))) {
             List<User> list = userManager.getBusinessList();
+            //TO DO togliere le password a tutti gli user ritornati dalla lista
             return list;
         } else {
             // TO DO informare l'utente dell'errore
@@ -252,6 +292,7 @@ public class UsersController {
         if (map.containsKey("idUser") && map.get("idUser") != null
                 && !userManager.newIDUserAvailable(UUID.fromString(map.get("idUser")))) {
             User user = userManager.searchUserByID(UUID.fromString(map.get("idUser"))).get();
+            user.setPassword("");
             return user;
         } else {
             // TO DO informare l'utente dell'errore
@@ -277,7 +318,7 @@ public class UsersController {
     }
 
     @PostMapping(value = "/deleteUsers")
-    public void deleteUsers(@RequestBody Map<String, String> map) {
+    public String deleteUsers(@RequestBody Map<String, String> map) {
         if (map.containsKey("idUser") && map.get("idUser") != null) {
             User admin = userManager.searchUserByID(UUID.fromString(map.get("idUser"))).get();
             if (admin != null && admin.getRole() == Roles.ADMIN && map.containsKey("idUsers") && map.get("idUsers") != null) {
@@ -291,8 +332,15 @@ public class UsersController {
                             userManager.deleteUser(temUser);
                         }
                     }
+                    return "Utenti selezionato eliminati correttamente";
+                }else{
+                    return "Nessun utente selezionato";
                 }
+            }else{
+                return "Non hai i permessi necessari per effettuare questa operazione. Se ritieni ci sia un errore contatta gli amministratori";
             }
+        }else{
+            return "Server error. Rieffettua il login o riprova più tardi";
         }
     }
 
@@ -320,7 +368,7 @@ public class UsersController {
     }
     
     @PostMapping(value = "/linkResetPassword")
-    public void linkResetPassword(@RequestBody Map<String, String> map) {
+    public String linkResetPassword(@RequestBody Map<String, String> map) {
         if (map.containsKey("emailUser") && map.get("emailUser") != null ) {
             User user = userManager.searchUserByEmail(map.get("emailUser"));
             if(user != null)
@@ -329,14 +377,15 @@ public class UsersController {
                 //TO DO apparere per la fase non di test
                 String body = "Ciao " + user.getUsername() + " Per resettare la password del tuo profilo fai click sul link qui sotto: \n\n" +
                 "http://localhost:8080/resetPassword?username=" + user.getUsername();
-                emailService.sendSimpleMail("enniosalomone@hotmail.it", body, "Reset password Appost");
+                emailService.sendSimpleMail(map.get("emailUser"), body, "Reset password Appost");
+                return "Riceverai una mail all'indirizzo " + map.get("emailUser") + " per il reset della password del tuo account";
             }
             else{
-                //TO DO insformare l'utente della mail errata
+                return "Non esistono utenti collegati alla mail " + map.get("emailUser");
             }
         }
         else{
-            //TO DO insformare l'utente della mail errata
+            return "Errore del sistema. Riprovare più tardi o contattare gli amministratori";
         }
     }
 
@@ -355,7 +404,7 @@ public class UsersController {
                 String body = "Ciao " + user.getUsername() + " La tua password è stata resettata con successo. Accedi all'app con le tua nuove credenziali: \n\n" +
                 "Username: " + username + "\n\n" +
                 "Password: " + newPassword + "\n\n" + "Suggeriamo di modificare la password con una di tuo gradimento e che sia differente dalla precedente.";
-                emailService.sendSimpleMail("enniosalomone@hotmail.it", body, "Appost invio nuove credenziali d'accesso");
+                emailService.sendSimpleMail(user.getEmail(), body, "Appost invio nuove credenziali d'accesso");
             }
             else{
                 //TO DO insformare l'utente della mail errata

@@ -1,6 +1,7 @@
 package com.appost.Controller;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.text.ParseException;
@@ -39,18 +40,15 @@ public class EventController {
     @PostMapping("/addEvent")
     public void addNewUser(@RequestBody Map<String, String> event) {
         Event newEvent = new Event();
-        DateFormat formatter;
-        formatter = new SimpleDateFormat("yyyy-MM-dd");
-
+        
         newEvent.setAddress(event.get("address"));
         newEvent.setEventName(event.get("eventName"));
         newEvent.setOrganizer(UUID.fromString(event.get("idOrganizer")));
-        try {
-            newEvent.setDate((Date) formatter.parse(event.get("date")));
-        } catch (ParseException e) {
-            System.err.println("Date format error. Send date in the format DD-MM-YYYY");
-            System.err.println(e.getMessage());
-        }
+        
+            //newEvent.setDate((Date) formatter.parse(event.get("date")));
+            newEvent.setDate(event.get("date"));
+
+    
         User organizer = userManager.searchUserByID(newEvent.getOrganizer()).get();
         if (organizer != null) {
             newEvent.setId(UUID.randomUUID());
@@ -215,7 +213,7 @@ public class EventController {
     }
 
     @PostMapping("/deleteOldEvent")
-    public void deleteOldEvent(@RequestBody Map<String, String> map){
+    public String deleteOldEvent(@RequestBody Map<String, String> map){
 
         if(map.containsKey("idUser") && map.get("idUser") != null)
         {
@@ -223,13 +221,14 @@ public class EventController {
             if(admin != null && admin.getRole() == Roles.ADMIN)
             {
                 eventManager.deletePastEvent();
+                return "Eventi passati cancellati correttamente";
             }
             else{
-                //TO DO informare l'utente della ricevuta richiesta errata
+                return "Non hai i permessi adeguati per questa operazione. Se ritieni ci sia stato un errore conttatta l'amministratore";
             }
         }
         else{
-            //TO DO informare l'utente della ricevuta richiesta errata
+            return "Errore nell'applicazione. Effettua nuovamente il login o riprova più tardi";
         }
 
     }
@@ -256,5 +255,39 @@ public class EventController {
         }
 
     }
+
+    @PostMapping("/updateEvent")
+    public String updateEvent(@RequestBody Map<String, String> map){
+
+        if (map.containsKey("idEvent") && map.get("idEvent") != null) {
+            Event event = eventManager.searchEventByID(UUID.fromString(map.get("idEvent"))).get();
+
+            if(event != null && event.getIdOrganizer() == UUID.fromString(map.get("idOrganizer")))
+            {
+                if (map.containsKey("name") && map.get("name") != null) {
+                    event.setEventName(map.get("name"));
+                }
+                if (map.containsKey("address") && map.get("address") != null) {
+                    event.setEventName(map.get("address"));
+                }
+                if (map.containsKey("date") && map.get("date") != null) {
+
+                    event.setDate(map.get("date"));
+                }
+                eventManager.updateEvent(event);
+                return "Evento aggiornato con successo";
+            }
+            else{
+                //TO DO informare l'utente della ricevuta richiesta errata
+                return null;
+            }
+        }
+        else{
+            //TO DO informare l'utente della ricevuta richiesta errata
+            return null;
+        }
+
+    }
+
 
 }

@@ -1,6 +1,9 @@
 package com.appost.model;
 
-import java.util.Date;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.UUID;
 
 import javax.persistence.Entity;
@@ -30,7 +33,7 @@ public class Event {
     @Type(type = "uuid-char")
     private UUID idOrganizer;
     private String nameOrganizer;
-    private Date date;
+    private String date;
     
 
     public Event (){
@@ -95,15 +98,15 @@ public class Event {
     /**
      * @return Date return the date
      */
-    public Date getDate() {
+    public String getDate() {
         return date;
     }
 
     /**
      * @param date the date to set
      */
-    public void setDate(Date date) {
-        this.date = date;
+    public void setDate(String date) {
+        this.date= date;
     }
 
 

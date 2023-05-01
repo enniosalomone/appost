@@ -67,7 +67,7 @@ public class UserManager {
     userRepository.save(user);
   }
 
-  public void addNewUserFriendship(String usernameFriend1, String usernameFriend2) {
+  public boolean addNewUserFriendship(String usernameFriend1, String usernameFriend2) {
     ArrayList<Friends> friends = (ArrayList<Friends>) friendsRepository.gerFriendList(usernameFriend1);
 
     boolean friendExist = false;
@@ -85,6 +85,7 @@ public class UserManager {
       newFriends.setId(UUID.randomUUID());
       friendsRepository.save(newFriends);
     }
+    return friendExist;
   }
 
   public List<Friends> getFriendsList(String idUser) {
@@ -116,7 +117,6 @@ public class UserManager {
 
   public List<User> getBusinessList()
   {
-    System.out.println(Roles.BUSINESS.ordinal());
     return userRepository.getBusinessList(Roles.BUSINESS.ordinal());
   }
 

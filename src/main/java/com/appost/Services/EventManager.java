@@ -3,7 +3,11 @@ package com.appost.Services;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -86,17 +90,18 @@ public class EventManager {
     {
         List<Event> events = eventRepository.findAll();
 
-        DateFormat formatter;
-        formatter = new SimpleDateFormat("yyyy-MM-dd");
+        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm");
 
         for(Event e : events)
         {
             try
             {
-                LocalDate tempLocalDate = LocalDate.now().minusDays(7);
-                Date tempDate = (Date) formatter.parse(tempLocalDate.toString());
+                LocalDateTime tempLocalDate = LocalDateTime.now().minusDays(7);
+                Date tempDate = formatter.parse(tempLocalDate.format(dateTimeFormatter));
+                Date eventDate = formatter.parse(e.getDate());
 
-                if(e.getDate().before(tempDate))
+                if(eventDate.before(tempDate))
                 {
                     partecipantManager.eventDeleted(e.getId());
                     eventRepository.delete(e);
@@ -105,6 +110,8 @@ public class EventManager {
             catch(Exception exception)
             {
                 System.err.println(exception.getMessage());
+                eventRepository.delete(e);
+
             }
         }
     }
@@ -112,18 +119,23 @@ public class EventManager {
     public List<Event> getAvailableEvents()
     {
         List<Event> events = eventRepository.findAll();
-
-        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd");
-
-        for(Event e : events)
+        List<Event> returnEvents = new ArrayList<Event>();
+        DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd hh:mm" );
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm");
+        for(Iterator<Event> i = events.iterator(); i.hasNext();)
         {
             try
             {
-                LocalDate tempLocalDate = LocalDate.now();
-                Date tempDate = (Date) formatter.parse(tempLocalDate.toString());
-                if(e.getDate().before(tempDate))
+                Event e = i.next();
+                Date eventDate =(Date) formatter.parse(e.getDate());
+                LocalDateTime tempLocalDate = LocalDateTime.now();
+                Date tempDate = formatter.parse(tempLocalDate.format(dateTimeFormatter));
+                if(eventDate.before(tempDate))
                 {
-                    events.remove(e);
+                    i.remove();
+                }
+                else{
+                    returnEvents.add(e);
                 }
             }
             catch(Exception exception)
@@ -131,7 +143,7 @@ public class EventManager {
                 System.err.println(exception.getMessage());
             }
         }
-        return events;
+        return returnEvents;
     }
 
     public List<Event> getMyEvents(String idPartner)
@@ -153,4 +165,8 @@ public class EventManager {
         return disc;
 
     }
+
+    public void updateEvent(Event event) {
+        eventRepository.save(event);
+      }
 }
