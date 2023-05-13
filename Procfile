@@ -1,0 +1,1 @@
+java -Dserver.port=$PORT $JAVA_OPTS -war target/appost-0.0.1-SNAPSHOT.war
