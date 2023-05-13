@@ -308,7 +308,6 @@ public class UsersController {
             if (admin != null && admin.getRole() == Roles.ADMIN) {
                 return userManager.gettAllUsers();
             } else {
-                // TO DO informare l'utente dell'errore
                 return null;
             }
         } else {
