@@ -12,7 +12,8 @@ target/
 .settings
 .springBeans
 .sts4-cache
-
+.sql
+.session
 ### IntelliJ IDEA ###
 .idea
 *.iws
@@ -20,6 +21,7 @@ target/
 *.ipr
 *.properties
 *.sql
+*.session
 ### NetBeans ###
 /nbproject/private/
 /nbbuild/
