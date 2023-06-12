@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Get Started</title>
+</head>
+<body>
+<div>
+  <h1>Inserisci username e password dell'account da cancellare</h1>
+</div>
+
+<form id="formDelete" onsubmit="formatJSONAndSend(document.getElementById('username').value, document.getElementById('password').value)">
+  <label for="fname">Username:</label><br>
+  <input type="text" id="username" name="username" value=""><br>
+  <label for="lname">Password:</label><br>
+  <input type="password" id="password" name="password" value="" ><br><br>
+  <input type="submit" value="Elimina Account">
+</form> 
+<script>
+function formatJSONAndSend(usr, psw) {
+  var body = {
+    "username": usr,
+    "password": psw
+  };
+
+  var request = new XMLHttpRequest();
+  request.open('POST', 'http://localhost:8080/deleteMyAccount');
+  request.setRequestHeader('Content-Type', 'application/json');    
+  request.send(JSON.stringify(body));
+}
+
+</script>
+</body>
+</html>
+

@@ -42,8 +42,10 @@ public class UsersController {
 
     @PostMapping("/addUser")
     public String addNewUser(@RequestBody User user) {
-        User userAdmin = userManager.searchUserByID(UUID.fromString(user.getId().toString())).get();
-        if(userAdmin.getRole() == Roles.ADMIN || user.getRole() == Roles.NORMAL){
+        User userAdmin = null;
+        if(user.getId() != null )
+            userAdmin = userManager.searchUserByID(UUID.fromString(user.getId().toString())).get();
+        if(user.getRole() == Roles.NORMAL || (userAdmin != null && userAdmin.getRole() == Roles.ADMIN) ){
         
             User newUser = user;
             user.setResetPasswordRequest(false);
@@ -341,6 +343,25 @@ public class UsersController {
         }else{
             return "Server error. Rieffettua il login o riprova più tardi";
         }
+    }
+
+    
+    @PostMapping(value = "/deleteMyAccount")
+    public void deleteMyAccount(@RequestBody Map<String, String> map) {
+        /*if (map.containsKey("username") && map.get("username") != null) {
+            User user = userManager.searchUserByID(UUID.fromString(map.get("username"))).get();
+            if (user != null && user.getPassword() == map.get("password") ) {
+                userManager.deleteUser(user);
+                                    
+                return "Utente eliminati correttamente";
+            }else{
+                return "Non hai i permessi necessari per effettuare questa operazione. Se ritieni ci sia un errore contatta gli amministratori";
+            }
+        }else{
+            return "Server error. Rieffettua il login o riprova più tardi";
+        }*/
+
+        System.out.println("Ciao");
     }
 
     @PostMapping(value = "/getFriendsList")
