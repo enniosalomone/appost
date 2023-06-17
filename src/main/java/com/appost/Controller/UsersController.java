@@ -347,21 +347,19 @@ public class UsersController {
 
     
     @PostMapping(value = "/deleteMyAccount")
-    public void deleteMyAccount(@RequestBody Map<String, String> map) {
-        /*if (map.containsKey("username") && map.get("username") != null) {
-            User user = userManager.searchUserByID(UUID.fromString(map.get("username"))).get();
-            if (user != null && user.getPassword() == map.get("password") ) {
+    public String deleteMyAccount(@RequestBody Map<String, String> map) {
+        if (map.containsKey("username") && map.get("username") != null) {
+            User user = userManager.searchUserByUsername(map.get("username"));
+            if (user != null && map.containsKey("username") && map.get("username") != null && user.getPassword() == map.get("password") ) {
                 userManager.deleteUser(user);
                                     
-                return "Utente eliminati correttamente";
+                return "Il tuo account è stato eliminato correttamente";
             }else{
-                return "Non hai i permessi necessari per effettuare questa operazione. Se ritieni ci sia un errore contatta gli amministratori";
+                return "Username o password inseriti non sono corretti";
             }
         }else{
-            return "Server error. Rieffettua il login o riprova più tardi";
-        }*/
-
-        System.out.println("Ciao");
+            return "Username o password inseriti non sono corretti";
+        }
     }
 
     @PostMapping(value = "/getFriendsList")
