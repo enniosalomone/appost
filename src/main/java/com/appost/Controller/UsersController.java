@@ -7,11 +7,10 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.appost.Support.RandomString;
 import com.appost.Services.EmailService;
+import com.appost.Services.EmailServiceImpl;
 import com.appost.Services.EventManager;
 import com.appost.Services.PartecipantManager;
 import com.appost.Services.UserManager;
@@ -431,6 +430,14 @@ public class UsersController {
         else{
             //TO DO insformare l'utente della mail errata
         }
+    }
+
+    @PostMapping(value = "/contactUs")
+    public String contactUs(@RequestBody Map<String, String> map) {
+        String body = "Messaggio ricevuto dall'utente " + map.get("username") + ":\n\n" +
+                map.get("message");
+                emailService.sendSimpleMail(emailService.getSender(), body, "Reset password Appost");
+        return "Il tuo messaggio è stato inviato agli amministratori di Appost. Verrai contattato tramite email quanto prima. In caso di problemi rivolgiti all'Azione Cattolica della diocesi di Cerreto";
     }
 
     @PostMapping(value = "/helloworld")

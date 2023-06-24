@@ -53,7 +53,10 @@ public class EmailServiceImpl implements EmailService {
         }
     }
 
-
+    public String getSender()
+    {
+        return sender;
+    }
     // Method 2
     // To send an email with attachment
     /*public String
