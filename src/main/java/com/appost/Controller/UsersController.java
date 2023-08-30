@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import com.appost.Support.RandomString;
 import com.appost.Services.EmailService;
-import com.appost.Services.EmailServiceImpl;
 import com.appost.Services.EventManager;
 import com.appost.Services.PartecipantManager;
 import com.appost.Services.UserManager;
@@ -61,7 +60,7 @@ public class UsersController {
             return "Utente " + user.getUsername() + " aggiunto correttamente";
         }
         else{
-            return "Non l'autoizzazione per poter aggiungere un nuovo utente con il ruolo assegnatogli.";
+            return "Non l'autorizzazione per poter aggiungere un nuovo utente con il ruolo assegnatogli.";
         }
     }
 

@@ -70,9 +70,12 @@ public class EventManager {
 
     public boolean existingEvent(UUID idEvent)
     {
-        Event e = eventRepository.findById(idEvent).get();
-
-        if(e != null)
+        Optional<Event> e = eventRepository.findById(idEvent);
+        Event event = null;
+        if(!e.isEmpty()){
+            event = e.get();
+        } 
+        if(event != null)
             return true;
         else
             return false;

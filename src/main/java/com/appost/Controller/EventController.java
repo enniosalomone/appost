@@ -81,7 +81,7 @@ public class EventController {
     }
 
     @PostMapping("/addPartecipant")
-    public void addPartecipant(@RequestBody Map<String, String> userPartecipant) {
+    public String addPartecipant(@RequestBody Map<String, String> userPartecipant) {
         UUID idEvent = null;
         UUID idPartecipant = null;
         if(userPartecipant.containsKey("idEvent") && userPartecipant.get("idEvent") != null){
@@ -92,19 +92,20 @@ public class EventController {
         }
         if(idEvent != null && idPartecipant != null){
             if (userManager.searchUserByID(idPartecipant) != null) {
-                partecipantManager.addPartecipantToEvent(idPartecipant, idEvent);
+                if(eventManager.searchEventByID(idEvent) != null){
+                    partecipantManager.addPartecipantToEvent(idPartecipant, idEvent);
+                    return "Sei stato iscritto all'evento correttamente";
+                }
+                else{
+                    return "L'evento non è presente nel nostro sistema, potrebbe essere stato cancellato. Se il poblema persiste rivolgersi agli amministratori";
+                }
             } else {
-            //TO DO
-            /* inserire risposta da ritornare. informare l'utente che non risulta iscritto e che c'è un errore
-             * nel messaggio
-             */
+            return "L'utente non risulta iscritto all'app. Se il poblema persiste rivolgersi agli amministratori";
             }
         }
         else{
-            // TO DO 
-            /* inserire risposta da ritornare. informare l'utente che c'è un errore
-             * nel messaggio
-             */
+            return "Errore nella comunicazione, riprovare più tardi";
+
         }
     }
 
